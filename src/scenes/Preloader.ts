@@ -31,10 +31,23 @@ export class Preloader extends Scene
     {
         //  Load the assets for the game - Replace with the path to your own assets
         this.load.setPath('assets');
-        this.load.image('player', 'frogbutactuallynormal.png');
-        this.load.image('background', 'nightpixelart3.png');
+        this.load.spritesheet('player', 'frog-sprite.png',{
+            frameWidth: 80,
+            frameHeight: 80,
+        });  
+        this.load.image('clef-note', 'clef-cloud.png')
+        this.load.image('background', 'background-staff.png');
+        this.load.image('main-menu', 'background.png');
+        this.load.image('game-over', 'background.png');
         this.load.image('logo', 'jazzfroglogo2.png');
-        this.load.atlas('coin', 'coin.png', 'coin.json');
+        this.load.spritesheet('coin', 'drawn-coin.png',{
+            frameWidth: 75,
+            frameHeight: 75,
+        });  
+        this.load.spritesheet('musicnote', 'music-note.png',{
+            frameWidth: 250,
+            frameHeight: 250,
+        });  
     }
 
     create ()
@@ -43,16 +56,17 @@ export class Preloader extends Scene
         //  For example, we will define our 'coin' animation here, so we can use it in other scenes:
 
         this.anims.create({
-            key: 'rotate',
-            frames: this.anims.generateFrameNames('coin', { prefix: 'coin_', start: 1, end: 7, zeroPad: 2 }),
-            frameRate: 16,
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('player', {frames: [1,2,3,4]}),
+            frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'vanish',
-            frames: this.anims.generateFrameNames('coin', { prefix: 'vanish_', start: 1, end: 4 }),
-            frameRate: 10
+            key: 'rotate',
+            frames: this.anims.generateFrameNumbers('coin', {frames: [1,2,3,4,5,6,7]}),
+            frameRate: 16,
+            repeat: -1
         });
 
         //  When all the assets are loaded go to the next scene.

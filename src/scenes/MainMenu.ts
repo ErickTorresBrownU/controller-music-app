@@ -26,17 +26,6 @@ export class MainMenu extends Scene
             ease: 'Bounce'
         });
 
-        //this.add.text(32, 32, `High Score: ${score}`, textStyle);
-
-        const instructions = [
-            'How many coins can you',
-            'collect in 30 seconds?',
-            '',
-            'Click to Start!'
-        ]
-
-        //this.add.text(512, 590, instructions, textStyle).setAlign('center').setOrigin(0.5);
-
         this.input.once('pointerdown', () => {
 
             this.scene.start('ClickerGame');

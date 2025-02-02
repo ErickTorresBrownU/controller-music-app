@@ -10,6 +10,7 @@ export class ClickerGame extends Scene {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private inputCooldown: number;
     private moveSpeed: number; // Movement speed
+    private background: Phaser.GameObjects.TileSprite;
 
     constructor() {
         super('ClickerGame');
@@ -22,6 +23,8 @@ export class ClickerGame extends Scene {
 
         const textStyle = { fontFamily: 'Storybook', fontSize: 55, color: '#ffffff', stroke: '#ff4500', strokeThickness: 8 };
         this.add.image(512, 384, 'background');
+
+        this.background = this.add.tileSprite(512, 384, 1024, 768, 'background');
 
         this.scoreText = this.add.text(32, 32, 'Coins: 0', textStyle).setDepth(1);
         this.timeText = this.add.text(1024 - 32, 32, 'Time: 10', textStyle).setOrigin(1, 0).setDepth(1);
