@@ -22,11 +22,12 @@ export class ClickerGame extends Scene {
         this.score = 0;
         this.coins = [];
         this.moveSpeed = 300; // Increased movement speed for better feel
+        this.gameRunning = true;
 
         const textStyle = { fontFamily: 'Storybook', fontSize: 55, color: '#ffffff', stroke: '#ff4500', strokeThickness: 8 };
-        this.add.image(512, 384, 'background');
 
-        this.background = this.add.tileSprite(512, 384, 1024, 768, 'background');
+        this.background = this.add.tileSprite(400, 280, 1300, 900, 'background');
+        this.background.setScale(0.65)
 
         this.scoreText = this.add.text(32, 32, 'Coins: 0', textStyle).setDepth(1);
         this.timeText = this.add.text(1024 - 32, 32, 'Time: 10', textStyle).setOrigin(1, 0).setDepth(1);
