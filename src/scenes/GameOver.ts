@@ -16,6 +16,6 @@ export class GameOver extends Scene
 
         this.add.image(400, 280, 'main-menu').setScale(0.65);
 
-        this.add.text(512, 300, `Game Over\n\nHigh Score: ${score}`, textStyle).setAlign('center').setOrigin(0.5);
+        this.add.text(400, 150, `Game Over\n\nHigh Score: ${score}`, textStyle).setAlign('center').setOrigin(0.5);
     }
 }

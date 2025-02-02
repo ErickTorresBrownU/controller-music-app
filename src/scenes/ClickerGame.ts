@@ -29,22 +29,20 @@ export class ClickerGame extends Scene {
         this.background = this.add.tileSprite(400, 280, 1300, 900, 'background');
         this.background.setScale(0.65)
 
-        this.scoreText = this.add.text(32, 32, 'Coins: 0', textStyle).setDepth(1);
-        this.timeText = this.add.text(1024 - 32, 32, 'Time: 10', textStyle).setOrigin(1, 0).setDepth(1);
+        this.scoreText = this.add.text(20, 32, 'Coins: 0', textStyle).setDepth(1);
+        this.timeText = this.add.text(800 - 30, 32, 'Time: 10', textStyle).setOrigin(1, 0).setDepth(1);
 
         this.timer = this.time.addEvent({ delay: 30000, callback: () => this.gameOver() });
 
         this.physics.world.setBounds(0, -400, 1024, 768 + 310);
 
-        this.player = this.physics.add.sprite(100, 300, 'player');
-        this.player.setScale(2);
+        this.player = this.physics.add.sprite(150, 300, 'player');
         this.player.width = 1000;
         this.player.setCollideWorldBounds(true);
         this.player.setDragY(600); // 🌟 Set drag for smooth stopping
         this.player.play('walk');
 
-        this.clef = this.add.sprite(80, 415, 'clef-note');
-        this.clef.setScale(1.5, 1.5)
+        this.clef = this.add.sprite(45, 255, 'clef-note');
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.inputCooldown = 0;
@@ -82,7 +80,7 @@ export class ClickerGame extends Scene {
         if (!this.gameRunning) return;
 
         const x = 1000;
-        const y = Phaser.Math.Between(600, 150);
+        const y = Phaser.Math.Between(400, 100);
 
         const coin = this.physics.add.sprite(x, y, 'coin').play('rotate');
         coin.setScale(0.5); // Adjust the scale factor as desired
