@@ -3,13 +3,16 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 
 import { Buffer } from "buffer";
+import { ModalContainer, ModalProvider } from './modals.tsx';
 
-// Attach Buffer globally (optional, but fixes some issues)
 globalThis.Buffer = Buffer;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <App />
+        <ModalProvider>
+            <App />
+            <ModalContainer />
+        </ModalProvider>
     </React.StrictMode>,
 )
 

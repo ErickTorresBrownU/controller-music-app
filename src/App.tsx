@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
-import { buttonDown } from "./musicplayer";
+import { buttonDown, buttonUp } from "./musicplayer";
+import { ModalProvider, useModals } from "./modals";
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
     const gamepadRef = useRef<Gamepad | null>(null);
     const buttonPressedLock = useRef<boolean>(false); // Ensures A only triggers once per press
+    const { showModal } = useModals();
 
     function gamepadLoop() {
         const gamepads = navigator.getGamepads();
@@ -38,12 +40,17 @@ const App = () => {
             console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
 
             // Send the mapped value to buttonDown
-            buttonDown(mappedValue, true);
+            buttonDown(mappedValue);
         }
+        // console.log(isAPressed, buttonPressedLock.current)
 
         if (!isAPressed && buttonPressedLock.current) {
-            // Reset lock when A is released
+            // A button was just released
             buttonPressedLock.current = false;
+
+            console.log("being called")
+            // Call buttonUp on release
+            buttonUp(); // Assuming `buttonUp` accepts the button kind
         }
 
         // Update state only if it has changed
@@ -79,6 +86,7 @@ const App = () => {
         </div>
     );
 };
+
 
 // Helper function to compare two Maps
 function areMapsEqual(map1: Map<unknown, unknown>, map2: Map<unknown, unknown>): boolean {
