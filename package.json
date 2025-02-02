@@ -12,6 +12,7 @@
     "dependencies": {
         "@magenta/music": "^1.23.0",
         "@tailwindcss/vite": "^4.0.3",
+        "phaser": "^3.87.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "soundfont-player": "^0.12.0",

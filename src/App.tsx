@@ -3,6 +3,8 @@ import "./App.css";
 import { buttonDown, buttonUp, player } from "./musicplayer";
 import { BaseModalProps, PromptModal, useModals } from "./modals";
 import { InstrumentName } from "soundfont-player";
+import { Game } from 'phaser';
+import { gameConfig } from "./game";
 
 interface PromptModalProps extends BaseModalProps {
     onConfirm?: () => void;
@@ -144,34 +146,43 @@ const App = () => {
         };
 
         window.addEventListener("gamepadconnected", onGamepadConnected);
+
+        const game = new Game(gameConfig);
+
+// Load and play the background music
+game.scene.add('BackgroundMusic', {
+    preload: function() {
+        this.load.audio('backgroundMusic', 'Funk Guitar Backing Track in C Minor.mp3');
+    },
+    create: function() {
+        const music = this.sound.add('backgroundMusic', { loop: true });
+        music.play();
+    }
+});
+
+game.scene.start('BackgroundMusic');
+
         return () => window.removeEventListener("gamepadconnected", onGamepadConnected);
     }, []);
 
     return (
         <div className="w-full h-screen bg-gray-100 flex items-center justify-center">
+            <div className="absolute inset-0" id="game-container"></div>
             <div className="flex flex-row items-center space-x-2">
-                {Object.values(ControllerButtonKind)
-                    .filter(Number.isInteger)
-                    .map((buttonKind) => (
-                        <ControllerButton
-                            key={buttonKind}
-                            buttonKind={buttonKind as ControllerButtonKind}
-                            pressed={buttonStates.get(buttonKind as ControllerButtonKind) ?? 0}
-                        />
-                    ))}
                 <button
                     type="button"
                     onClick={() => {
                         showModal(<SettingsMenuModal title="Settings" />);
                     }}
                 >
-                    Click me!
+                    Settings
                 </button>
             </div>
         </div>
     );
 };
 
+    
 
 
 // Helper function to compare two Maps
