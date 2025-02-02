@@ -12,6 +12,7 @@ export class ClickerGame extends Scene {
     private moveSpeed: number; // Movement speed
     private background: Phaser.GameObjects.TileSprite;
     private clef: Phaser.GameObjects.Sprite;
+    private gameRunning: boolean;
 
     constructor() {
         super('ClickerGame');
@@ -131,9 +132,13 @@ export class ClickerGame extends Scene {
         }
 
         this.timeText.setText('Time: ' + Math.ceil(this.timer.getRemainingSeconds()));
+
+        this.background.tilePositionX += 1;
     }
 
     gameOver() {
+        this.gameRunning = false;
+
         this.coins.forEach((coin) => {
             if (coin.active) {
                 coin.setVelocity(0, 0);
