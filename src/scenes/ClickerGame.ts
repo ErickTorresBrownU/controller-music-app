@@ -14,8 +14,7 @@ export class ClickerGame extends Scene
         this.coins = [];
         // this.coins = this.physics.add.group();
 
-        const textStyle = { fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff', stroke: '#000000', strokeThickness: 8 };
-
+        const textStyle = { fontFamily: 'Storybook', fontSize: 55, color: '#ffffff', stroke: '#ff4500', strokeThickness: 8 };
         this.add.image(512, 384, 'background');
 
         this.scoreText = this.add.text(32, 32, 'Coins: 0', textStyle).setDepth(1);
@@ -34,6 +33,7 @@ export class ClickerGame extends Scene
         }
 
         this.player = this.physics.add.sprite(100, 300, 'player');
+        this.player.setScale(2);
         this.player.setWidth = 1000;
         this.player.setCollideWorldBounds(true);
 
