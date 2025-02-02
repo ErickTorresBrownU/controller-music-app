@@ -1,21 +1,19 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
 
-import { Command } from '@tauri-apps/plugin-shell';
+import { Buffer } from "buffer";
 
-async function runSidecar() {
-    const message = 'Tauri';
-    const command = Command.sidecar('binaries/app', ['ping', message]);
+// Attach Buffer globally (optional, but fixes some issues)
+globalThis.Buffer = Buffer;
 
-    const output = await command.execute();
-    console.log('Sidecar response:', output.stdout);
-}
-
-runSidecar();
-
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />
     </React.StrictMode>,
-);
+)
+
+// Use contextBridge
+window.ipcRenderer.on('main-process-message', (_event, message) => {
+    console.log(message)
+})

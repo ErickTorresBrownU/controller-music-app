@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
-import { buttonDown } from './musicplayer'
-
+import { buttonDown } from "./musicplayer";
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
     const gamepadRef = useRef<Gamepad | null>(null);
-    const lastTriggerValue = useRef({ left: 0, right: 0 });
+    const buttonPressedLock = useRef<boolean>(false); // Ensures A only triggers once per press
 
     function gamepadLoop() {
         const gamepads = navigator.getGamepads();
@@ -18,29 +17,33 @@ const App = () => {
 
         // Track button states
         const newButtonStates = new Map<ControllerButtonKind, number>();
-
         gamepad.buttons.forEach((button, index) => {
             if (Object.values(ControllerButtonKind).includes(index)) {
                 newButtonStates.set(index as ControllerButtonKind, button.pressed ? 1 : button.value);
             }
         });
 
-        if (newButtonStates.get(ControllerButtonKind.A) ?? 0 > 0) {
-            buttonDown(0, true);
+        const isAPressed = (newButtonStates.get(ControllerButtonKind.A) ?? 0) > 0;
+
+        if (isAPressed && !buttonPressedLock.current) {
+            // A button just got pressed
+            buttonPressedLock.current = true;
+
+            // Read left joystick's x-axis (-1 to 1)
+            const leftStickX = gamepad.axes[0];
+
+            // Map joystick value from -1 to 1 -> 0 to 8
+            const mappedValue = Math.round(((leftStickX + 1) / 2) * 8);
+
+            console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
+
+            // Send the mapped value to buttonDown
+            buttonDown(mappedValue, true);
         }
 
-        // Detect trigger changes (only update when value changes significantly)
-        const leftTrigger = gamepad.buttons[6]?.value ?? 0;
-        const rightTrigger = gamepad.buttons[7]?.value ?? 0;
-
-        if (Math.abs(leftTrigger - lastTriggerValue.current.left) > 0.1) {
-            lastTriggerValue.current.left = leftTrigger;
-            console.log(`Left Trigger: ${leftTrigger}`);
-        }
-
-        if (Math.abs(rightTrigger - lastTriggerValue.current.right) > 0.1) {
-            lastTriggerValue.current.right = rightTrigger;
-            console.log(`Right Trigger: ${rightTrigger}`);
+        if (!isAPressed && buttonPressedLock.current) {
+            // Reset lock when A is released
+            buttonPressedLock.current = false;
         }
 
         // Update state only if it has changed

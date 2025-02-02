@@ -1,7 +1,30 @@
-This is a Tauri application. The backend is written in Rust and the frontend in TypeScript React.
+# React + TypeScript + Vite
 
-Game controller compatability will be handled in Rust. Game controls will be processed and forwarded to the frontend by emitting events. You can read more about that here: <https://v1.tauri.app/v1/guides/features/events>
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Development
+Currently, two official plugins are available:
 
-In order to run the app, you'll need to make sure you have Rust and Node installed on your machine.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
+```
+
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
