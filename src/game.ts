@@ -4,21 +4,24 @@ import { GameOver } from './scenes/GameOver';
 import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
 
-//  Find out more information about the Game Config at: https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
+// Game configuration with dynamic resizing
 export const gameConfig = {
     type: Phaser.AUTO,
-    width: 1024,
-    height: 768,
+    width: '100%',  // Set the width to a percentage of the container
+    height: '100%', // Set the height to a percentage of the container
     parent: 'game-container',
     backgroundColor: '#028af8',
     scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        mode: Phaser.Scale.FIT,         // Fit the game to the container
+        autoCenter: Phaser.Scale.CENTER_BOTH, // Center the game within the container
+        width: window.innerWidth,       // Set initial width based on the window size
+        height: window.innerHeight,     // Set initial height based on the window size
     },
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 0 }
+            gravity: { y: 0 },
+            debug: false
         }
     },
     scene: [
@@ -30,5 +33,15 @@ export const gameConfig = {
     ],
     audio: {
         disableWebAudio: true
+    },
+    callbacks: {
+        postBoot: function (game) {
+            // Automatically resize the game when the window is resized
+            window.addEventListener('resize', () => {
+                // Use Phaser's scale manager to adjust the game size on window resize
+                game.scale.resize(window.innerWidth, window.innerHeight);
+                game.scale.refresh();  // Force a recalculation of the scale after resize
+            });
+        }
     }
 };

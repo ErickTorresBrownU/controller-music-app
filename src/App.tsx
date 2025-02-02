@@ -1,79 +1,15 @@
-import { useEffect, useState, useRef, FC } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./App.css";
 import { buttonDown, buttonUp, player } from "./musicplayer";
-import { BaseModalProps, PromptModal, useModals } from "./modals";
-import { InstrumentName } from "soundfont-player";
+import { useModals } from "./modals";
 import { Game } from 'phaser';
 import { gameConfig } from "./game";
-
-interface PromptModalProps extends BaseModalProps {
-    onConfirm?: () => void;
-    onCancel?: () => void;
-    confirmText?: string;
-    cancelText?: string;
-}
-
-const SettingsMenuModal: FC<PromptModalProps> = ({
-    title,
-    bodyText,
-    onConfirm,
-    onCancel,
-    confirmText = "Confirm",
-    cancelText = "Cancel",
-}) => {
-    const { popModal } = useModals();
-    const [instruments, setInstruments] = useState<string[]>([]);
-
-    useEffect(() => {
-        fetch("https://gleitz.github.io/midi-js-soundfonts/MusyngKite/names.json").then((res) => res.json()).then(json => setInstruments(json))
-    }, [])
-
-    return (
-        <div className="w-[5/12] rounded-xl border-2 border-gray-300 bg-white p-8 shadow-lg">
-            <h1 className="text-lg font-bold text-gray-900">{title}</h1>
-            <p className="mt-4 text-gray-700">{bodyText}</p>
-            <select
-                onChange={(e) => {
-                    const selectedInstrument = e.target.value;
-                    console.log("Selected:", selectedInstrument);
-                    player.loadSoundFont(selectedInstrument as InstrumentName);
-                }}
-            >
-                <option value="" disabled selected>Select an instrument</option>
-                {instruments.map((instrument) => (
-                    <option key={instrument} value={instrument}>
-                        {instrument}
-                    </option>
-                ))}
-            </select>
-
-            <div className="mt-8 flex flex-row space-x-4">
-                <button
-                    className="flex w-full items-center justify-center rounded-md border-2 border-gray-300 bg-gray-100 px-6 py-2 text-gray-800 transition duration-200 hover:bg-gray-200"
-                    onClick={() => {
-                        onCancel?.();
-                        popModal();
-                    }}
-                >
-                    {cancelText}
-                </button>
-                <button
-                    className="flex w-full items-center justify-center rounded-md border-2 border-blue-600 bg-blue-600 px-6 py-2 text-white transition duration-200 hover:bg-blue-700"
-                    onClick={() => {
-                        onConfirm?.();
-                        popModal();
-                    }}
-                >
-                    {confirmText}
-                </button>
-            </div>
-        </div>
-    );
-};
+import { ClickerGame } from "./scenes/ClickerGame";
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
     const gamepadRef = useRef<Gamepad | null>(null);
+    const gameRef = useRef<Game | null>(null);
 
     // Map to track pressed states for each button
     const buttonPressedLock = useRef<Map<ControllerButtonKind, boolean>>(new Map());
@@ -107,22 +43,31 @@ const App = () => {
 
                 // Read joystick position
                 const leftStickX = gamepad.axes[0];
-
-                // Map joystick value from -1 to 1 -> 0 to 8
                 const mappedValue = Math.round(((leftStickX + 1) / 2) * 8);
 
                 console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
 
-                // Call buttonDown with the mapped value and button kind
                 buttonDown(mappedValue, buttonKind);
+
+                if (!gameRef.current) return;
+                const clickerGame = gameRef.current.scene.getScene('ClickerGame') as ClickerGame;
+
+                const leftStickY = gamepad.axes[1];
+                console.log(`Joystick Y: ${leftStickY}`);
+
+                const threshold = 0.2; // Adjust for joystick drift (0.01 is too small)
+                if (leftStickY < -threshold) {
+                    console.log("Queueing Move Up");
+                    clickerGame.moveUp();
+                } else if (leftStickY > threshold) {
+                    console.log("Queueing Move Down");
+                    clickerGame.moveDown();
+                }
             }
 
             if (!isPressed && wasPressed) {
-                // Button was just released
                 buttonPressedLock.current.set(buttonKind, false);
-
                 console.log(`Button ${buttonKind} released`);
-                // Call buttonUp for the released button
                 buttonUp(buttonKind);
             }
         });
@@ -136,8 +81,10 @@ const App = () => {
             return new Map(newButtonStates);
         });
 
+        // Ensure continuous polling of gamepad
         requestAnimationFrame(gamepadLoop);
     }
+
 
     useEffect(() => {
         const onGamepadConnected = (e: GamepadEvent) => {
@@ -149,18 +96,19 @@ const App = () => {
 
         const game = new Game(gameConfig);
 
-// Load and play the background music
-game.scene.add('BackgroundMusic', {
-    preload: function() {
-        this.load.audio('backgroundMusic', 'Funk Guitar Backing Track in C Minor.mp3');
-    },
-    create: function() {
-        const music = this.sound.add('backgroundMusic', { loop: true });
-        music.play();
-    }
-});
+        // Load and play the background music
+        game.scene.add('BackgroundMusic', {
+            preload: function () {
+                this.load.audio('backgroundMusic', 'Funk Guitar Backing Track in C Minor.mp3');
+            },
+            create: function () {
+                const music = this.sound.add('backgroundMusic', { loop: true });
+                music.play();
+            }
+        });
 
-game.scene.start('BackgroundMusic');
+        game.scene.start('BackgroundMusic');
+        gameRef.current = game;
 
         return () => window.removeEventListener("gamepadconnected", onGamepadConnected);
     }, []);
@@ -182,7 +130,7 @@ game.scene.start('BackgroundMusic');
     );
 };
 
-    
+
 
 
 // Helper function to compare two Maps

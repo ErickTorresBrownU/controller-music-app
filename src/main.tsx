@@ -8,12 +8,10 @@ import { ModalContainer, ModalProvider } from './modals.tsx';
 globalThis.Buffer = Buffer;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <ModalProvider>
-            <App />
-            <ModalContainer />
-        </ModalProvider>
-    </React.StrictMode>,
+    <ModalProvider>
+        <App />
+        <ModalContainer />
+    </ModalProvider>
 )
 
 // Use contextBridge
