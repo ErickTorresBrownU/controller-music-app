@@ -1,5 +1,6 @@
 import * as mm from "@magenta/music";
-import Soundfont from "soundfont-player";
+import Soundfont, { InstrumentName } from "soundfont-player";
+import { ControllerButtonKind } from "./App";
 
 export const CONSTANTS = {
     COLORS: ['#EE2B29', '#ff9800', '#ffff00', '#c6ff00', '#00e5ff', '#2979ff', '#651fff', '#d500f9'],
@@ -47,15 +48,18 @@ const keyWhitelist: number[] = Array.from({ length: TOTAL_NOTES + 1 }).map((_, i
 export class Player {
     private audioContext: AudioContext;
     private instrument: any | null = null;
-    private player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    private noteSustainStrength: number = 0;
+    private activeNotes: Map<number, AudioBufferSourceNode> = new Map();
 
     constructor() {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        this.loadSoundFont();
+        this.loadSoundFont("acoustic_grand_piano");
     }
-    async loadSoundFont() {
+
+    async loadSoundFont(instrument: InstrumentName) {
+        console.log(`Loading ${instrument}...`);
         try {
-            this.instrument = await Soundfont.instrument(this.audioContext, "ocarina", {
+            this.instrument = await Soundfont.instrument(this.audioContext, instrument, {
                 soundfont: CONSTANTS.SOUNDFONT_URL,
             });
             console.log("✅ SoundFont loaded successfully");
@@ -64,35 +68,58 @@ export class Player {
         }
     }
 
+    public setSustainStrength(sustainStrength: number) {
+        this.noteSustainStrength = sustainStrength;
+    }
+
     async playNoteDown(pitch: number) {
-        if (this.player) {
-            // await mm.Player.tone.context.resume();
-            this.instrument.play(pitch, this.audioContext.currentTime, { duration: 1 });
-        } else {
-            console.warn("⚠️ SoundFont not loaded yet.");
+        if (!this.instrument) return;
+
+        const now = this.audioContext.currentTime;
+        const noteSource = this.instrument.play(pitch, now, { gain: 1 });
+
+        if (noteSource) {
+            this.activeNotes.set(pitch, noteSource);
         }
     }
 
-    async playNoteUp(pitch) {
-        // Send to MIDI out or play with the Magenta player.
-        // if (this.usingMidiOut) {
-        //   this.sendMidiNoteOff(pitch, button);
-        // } else {
-        //   this.player.playNoteUp({pitch:pitch});
-        // }
-        if (!this.player) return;
-        console.log(pitch)
-        this.player.playNoteUp({ pitch: pitch });
+    async playNoteUp(pitch: number) {
+        if (!this.instrument || !this.activeNotes.has(pitch)) return;
+
+        const noteSource = this.activeNotes.get(pitch);
+        this.activeNotes.delete(pitch);
+
+        if (noteSource) {
+            // Create a gain node for fade-out
+            const gainNode = this.audioContext.createGain();
+            noteSource.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            // Apply a linear fade-out
+            const fadeTime = 1 * this.noteSustainStrength; // Adjust fade time as needed
+            const currentTime = this.audioContext.currentTime;
+
+            gainNode.gain.setValueAtTime(1, currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeTime); // Smooth linear fade to 0
+
+            // Stop the note slightly after the fade-out
+            setTimeout(() => {
+                noteSource.stop(); // Safely stop the note
+                noteSource.disconnect(); // Clean up resources
+                gainNode.disconnect(); // Disconnect gain node
+            }, (fadeTime + 0.1) * 1000); // Add a small buffer (100ms) to ensure no cut-off
+        }
     }
 }
 
-const player = new Player();
+
+export const player = new Player();
 const genie = new mm.PianoGenie(CONSTANTS.GENIE_CHECKPOINT);
 await genie.initialize();
 console.log("initialized!")
 
 let lastPlayedNote: number | null = null;
-export async function buttonDown(button: number) {
+export async function buttonDown(button: number, buttonKind: ControllerButtonKind) {
     if (!genie) {
         console.warn("⚠️ Piano Genie is not ready yet.");
         return;
@@ -101,8 +128,20 @@ export async function buttonDown(button: number) {
     const TEMPERATURE = 0.25;
 
     // Add the MIDI values corresponding to the C major scale to the keyWhitelist array
-    const cMajorScale = [0, 2, 3, 4, 7, 9]; // MIDI values for C major scale
-    let filteredKeyWhitelist = keyWhitelist.filter((note) => cMajorScale.includes((note + 9) % 12));
+    const cMajorScale = [0, 3, 5, 6, 7, 10]; // MIDI values for C major scale
+    const notCMajorScale = [1, 2, 4, 8, 9, 11];
+
+    function getScaleFromInput(buttonKind: ControllerButtonKind) {
+        switch (buttonKind) {
+            case ControllerButtonKind.A:
+                return cMajorScale;
+            case ControllerButtonKind.X:
+                return notCMajorScale;
+            default:
+                return cMajorScale;
+        }
+    }
+    let filteredKeyWhitelist = keyWhitelist.filter((note) => getScaleFromInput(buttonKind).includes((note + 9) % 12));
 
     // Remove the last played note from the filteredKeyWhitelist
     if (lastPlayedNote !== null) {

@@ -23,7 +23,7 @@ export const ModalProvider: FC = ({ children }) => {
     );
 };
 
-interface BaseModalProps {
+export interface BaseModalProps {
     title: string;
     bodyText: string;
 }

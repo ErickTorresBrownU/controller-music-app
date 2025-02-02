@@ -1,12 +1,81 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, FC } from "react";
 import "./App.css";
-import { buttonDown, buttonUp } from "./musicplayer";
-import { ModalProvider, useModals } from "./modals";
+import { buttonDown, buttonUp, player } from "./musicplayer";
+import { BaseModalProps, PromptModal, useModals } from "./modals";
+import { InstrumentName } from "soundfont-player";
+
+interface PromptModalProps extends BaseModalProps {
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+}
+
+const SettingsMenuModal: FC<PromptModalProps> = ({
+    title,
+    bodyText,
+    onConfirm,
+    onCancel,
+    confirmText = "Confirm",
+    cancelText = "Cancel",
+}) => {
+    const { popModal } = useModals();
+    const [instruments, setInstruments] = useState<string[]>([]);
+
+    useEffect(() => {
+        fetch("https://gleitz.github.io/midi-js-soundfonts/MusyngKite/names.json").then((res) => res.json()).then(json => setInstruments(json))
+    }, [])
+
+    return (
+        <div className="w-[5/12] rounded-xl border-2 border-gray-300 bg-white p-8 shadow-lg">
+            <h1 className="text-lg font-bold text-gray-900">{title}</h1>
+            <p className="mt-4 text-gray-700">{bodyText}</p>
+            <select
+                onChange={(e) => {
+                    const selectedInstrument = e.target.value;
+                    console.log("Selected:", selectedInstrument);
+                    player.loadSoundFont(selectedInstrument as InstrumentName);
+                }}
+            >
+                <option value="" disabled selected>Select an instrument</option>
+                {instruments.map((instrument) => (
+                    <option key={instrument} value={instrument}>
+                        {instrument}
+                    </option>
+                ))}
+            </select>
+
+            <div className="mt-8 flex flex-row space-x-4">
+                <button
+                    className="flex w-full items-center justify-center rounded-md border-2 border-gray-300 bg-gray-100 px-6 py-2 text-gray-800 transition duration-200 hover:bg-gray-200"
+                    onClick={() => {
+                        onCancel?.();
+                        popModal();
+                    }}
+                >
+                    {cancelText}
+                </button>
+                <button
+                    className="flex w-full items-center justify-center rounded-md border-2 border-blue-600 bg-blue-600 px-6 py-2 text-white transition duration-200 hover:bg-blue-700"
+                    onClick={() => {
+                        onConfirm?.();
+                        popModal();
+                    }}
+                >
+                    {confirmText}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
     const gamepadRef = useRef<Gamepad | null>(null);
-    const buttonPressedLock = useRef<boolean>(false); // Ensures A only triggers once per press
+
+    // Map to track pressed states for each button
+    const buttonPressedLock = useRef<Map<ControllerButtonKind, boolean>>(new Map());
+
     const { showModal } = useModals();
 
     function gamepadLoop() {
@@ -21,40 +90,46 @@ const App = () => {
         const newButtonStates = new Map<ControllerButtonKind, number>();
         gamepad.buttons.forEach((button, index) => {
             if (Object.values(ControllerButtonKind).includes(index)) {
-                newButtonStates.set(index as ControllerButtonKind, button.pressed ? 1 : button.value);
+                newButtonStates.set(index as ControllerButtonKind, button.pressed ? button.value : 0);
             }
         });
 
-        const isAPressed = (newButtonStates.get(ControllerButtonKind.A) ?? 0) > 0;
+        // Handle buttons like A and X
+        [ControllerButtonKind.A, ControllerButtonKind.X].forEach((buttonKind) => {
+            const isPressed = (newButtonStates.get(buttonKind) ?? 0) > 0;
+            const wasPressed = buttonPressedLock.current.get(buttonKind) || false;
 
-        if (isAPressed && !buttonPressedLock.current) {
-            // A button just got pressed
-            buttonPressedLock.current = true;
+            if (isPressed && !wasPressed) {
+                // Button just got pressed
+                buttonPressedLock.current.set(buttonKind, true);
 
-            // Read left joystick's x-axis (-1 to 1)
-            const leftStickX = gamepad.axes[0];
+                // Read joystick position
+                const leftStickX = gamepad.axes[0];
 
-            // Map joystick value from -1 to 1 -> 0 to 8
-            const mappedValue = Math.round(((leftStickX + 1) / 2) * 8);
+                // Map joystick value from -1 to 1 -> 0 to 8
+                const mappedValue = Math.round(((leftStickX + 1) / 2) * 8);
 
-            console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
+                console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
 
-            // Send the mapped value to buttonDown
-            buttonDown(mappedValue);
-        }
-        // console.log(isAPressed, buttonPressedLock.current)
+                // Call buttonDown with the mapped value and button kind
+                buttonDown(mappedValue, buttonKind);
+            }
 
-        if (!isAPressed && buttonPressedLock.current) {
-            // A button was just released
-            buttonPressedLock.current = false;
+            if (!isPressed && wasPressed) {
+                // Button was just released
+                buttonPressedLock.current.set(buttonKind, false);
 
-            console.log("being called")
-            // Call buttonUp on release
-            buttonUp(); // Assuming `buttonUp` accepts the button kind
-        }
+                console.log(`Button ${buttonKind} released`);
+                // Call buttonUp for the released button
+                buttonUp(buttonKind);
+            }
+        });
+
+        // Example: Adjust sustain strength using the right trigger
+        player.setSustainStrength(newButtonStates.get(ControllerButtonKind.RT) ?? 0);
 
         // Update state only if it has changed
-        setButtonStates(prevStates => {
+        setButtonStates((prevStates) => {
             if (areMapsEqual(prevStates, newButtonStates)) return prevStates;
             return new Map(newButtonStates);
         });
@@ -75,17 +150,28 @@ const App = () => {
     return (
         <div className="w-full h-screen bg-gray-100 flex items-center justify-center">
             <div className="flex flex-row items-center space-x-2">
-                {Object.values(ControllerButtonKind).filter(Number.isInteger).map(buttonKind => (
-                    <ControllerButton
-                        key={buttonKind}
-                        buttonKind={buttonKind as ControllerButtonKind}
-                        pressed={buttonStates.get(buttonKind as ControllerButtonKind) ?? 0}
-                    />
-                ))}
+                {Object.values(ControllerButtonKind)
+                    .filter(Number.isInteger)
+                    .map((buttonKind) => (
+                        <ControllerButton
+                            key={buttonKind}
+                            buttonKind={buttonKind as ControllerButtonKind}
+                            pressed={buttonStates.get(buttonKind as ControllerButtonKind) ?? 0}
+                        />
+                    ))}
+                <button
+                    type="button"
+                    onClick={() => {
+                        showModal(<SettingsMenuModal title="Settings" />);
+                    }}
+                >
+                    Click me!
+                </button>
             </div>
         </div>
     );
 };
+
 
 
 // Helper function to compare two Maps
@@ -97,7 +183,7 @@ function areMapsEqual(map1: Map<unknown, unknown>, map2: Map<unknown, unknown>):
     return true;
 }
 
-enum ControllerButtonKind {
+export enum ControllerButtonKind {
     A = 0,
     B = 1,
     X = 2,
