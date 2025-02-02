@@ -75,12 +75,12 @@ export class ClickerGame extends Scene
         this.coins.push(coin);
         */
        //const x = Phaser.Math.Between(0, 400);
-       const x = 1000 / 2;
-       const y = Phaser.Math.Between(600, 150) / 2;
+       const x = 1000;
+       const y = Phaser.Math.Between(600, 150);
 
-       const coin = this.physics.add.sprite(x, y, 'coin').play('rotate');
-
-       coin.setVelocityX(-400);
+    const coin = this.physics.add.sprite(x, y, 'coin').play('rotate');
+    coin.setScale(0.5); // Adjust the scale factor as desired
+       coin.setVelocityX(-500);
        coin.setInteractive();
 
        this.coins.push(coin);
