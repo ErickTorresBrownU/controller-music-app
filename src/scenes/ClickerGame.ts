@@ -40,6 +40,7 @@ export class ClickerGame extends Scene {
         this.player.width = 1000;
         this.player.setCollideWorldBounds(true);
         this.player.setDragY(600); // 🌟 Set drag for smooth stopping
+        this.player.play('walk');
 
         this.clef = this.add.sprite(80, 415, 'clef-note');
         this.clef.setScale(1.5, 1.5)
