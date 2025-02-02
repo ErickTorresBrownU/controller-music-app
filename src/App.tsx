@@ -5,6 +5,7 @@ import { useModals } from "./modals";
 import { Game } from 'phaser';
 import { gameConfig } from "./game";
 import { ClickerGame } from "./scenes/ClickerGame";
+import { SettingsMenuModal } from "./SettingsMenuModal";
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
@@ -42,17 +43,17 @@ const App = () => {
                 buttonPressedLock.current.set(buttonKind, true);
 
                 // Read joystick position
-                const leftStickX = gamepad.axes[0];
-                const mappedValue = Math.round(((leftStickX + 1) / 2) * 8);
+                const leftStickY = gamepad.axes[1];
 
-                console.log(`Joystick X: ${leftStickX}, Mapped Value: ${mappedValue}`);
+                const mappedValue = Math.round(((-leftStickY + 1) / 2) * 8);
+
+                console.log(`Joystick X: ${leftStickY}, Mapped Value: ${mappedValue}`);
 
                 buttonDown(mappedValue, buttonKind);
 
                 if (!gameRef.current) return;
                 const clickerGame = gameRef.current.scene.getScene('ClickerGame') as ClickerGame;
 
-                const leftStickY = gamepad.axes[1];
                 console.log(`Joystick Y: ${leftStickY}`);
 
                 const threshold = 0.2; // Adjust for joystick drift (0.01 is too small)
@@ -102,7 +103,7 @@ const App = () => {
                 this.load.audio('backgroundMusic', 'Funk Guitar Backing Track in C Minor.mp3');
             },
             create: function () {
-                const music = this.sound.add('backgroundMusic', { loop: true });
+                const music = this.sound.add('backgroundMusic', { loop: true, volume: 0.05 });
                 music.play();
             }
         });
@@ -116,9 +117,10 @@ const App = () => {
     return (
         <div className="w-full h-screen bg-gray-100 flex items-center justify-center">
             <div className="absolute inset-0" id="game-container"></div>
-            <div className="flex flex-row items-center space-x-2">
+            <div className="absolute right-5 bottom-5 pointer-events-none">
                 <button
                     type="button"
+                    className="bg-gray-200 rounded-md p-2 pointer-events-auto"
                     onClick={() => {
                         showModal(<SettingsMenuModal title="Settings" />);
                     }}

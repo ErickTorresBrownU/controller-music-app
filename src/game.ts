@@ -34,14 +34,4 @@ export const gameConfig = {
     audio: {
         disableWebAudio: true
     },
-    callbacks: {
-        postBoot: function (game) {
-            // Automatically resize the game when the window is resized
-            window.addEventListener('resize', () => {
-                // Use Phaser's scale manager to adjust the game size on window resize
-                game.scale.resize(window.innerWidth, window.innerHeight);
-                game.scale.refresh();  // Force a recalculation of the scale after resize
-            });
-        }
-    }
 };

@@ -20,8 +20,7 @@ export class ClickerGame extends Scene {
         this.coins = [];
         this.moveSpeed = 300; // Increased movement speed for better feel
 
-        const textStyle = { fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff', stroke: '#000000', strokeThickness: 8 };
-
+        const textStyle = { fontFamily: 'Storybook', fontSize: 55, color: '#ffffff', stroke: '#ff4500', strokeThickness: 8 };
         this.add.image(512, 384, 'background');
 
         this.scoreText = this.add.text(32, 32, 'Coins: 0', textStyle).setDepth(1);
@@ -32,11 +31,22 @@ export class ClickerGame extends Scene {
         this.physics.world.setBounds(0, -400, 1024, 768 + 310);
 
         this.player = this.physics.add.sprite(100, 300, 'player');
+        this.player.setScale(2);
+        this.player.width = 1000;
         this.player.setCollideWorldBounds(true);
         this.player.setDragY(600); // 🌟 Set drag for smooth stopping
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.inputCooldown = 0;
+
+        const INITIAL_COIN_SPAWN_COUNT = 20;
+        for (let i = 0; i < INITIAL_COIN_SPAWN_COUNT; i++) {
+            setTimeout(() => {
+                this.dropCoin();
+            }, i * 500)
+        }
+
+        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
     }
 
     /** Moves the player up using velocity */
@@ -59,12 +69,14 @@ export class ClickerGame extends Scene {
     }
 
     dropCoin() {
-        const x = 1000 / 2;
-        const y = Phaser.Math.Between(600, 150) / 2;
+        const x = 1000;
+        const y = Phaser.Math.Between(600, 150);
 
         const coin = this.physics.add.sprite(x, y, 'coin').play('rotate');
-        coin.setVelocityX(-400);
+        coin.setScale(0.5); // Adjust the scale factor as desired
+        coin.setVelocityX(-500);
         coin.setInteractive();
+
         this.coins.push(coin);
     }
 

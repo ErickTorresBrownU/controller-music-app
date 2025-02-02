@@ -16,16 +16,17 @@ export class MainMenu extends Scene
 
         this.add.image(512, 384, 'background');
 
-        const logo = this.add.image(512, -270, 'logo');
+        const logo = this.add.image(512, -100, 'logo');
+        logo.setScale(1.3)
 
         this.tweens.add({
             targets: logo,
-            y: 270,
+            y: 333,
             duration: 1000,
             ease: 'Bounce'
         });
 
-        this.add.text(32, 32, `High Score: ${score}`, textStyle);
+        //this.add.text(32, 32, `High Score: ${score}`, textStyle);
 
         const instructions = [
             'How many coins can you',
@@ -34,7 +35,7 @@ export class MainMenu extends Scene
             'Click to Start!'
         ]
 
-        this.add.text(512, 590, instructions, textStyle).setAlign('center').setOrigin(0.5);
+        //this.add.text(512, 590, instructions, textStyle).setAlign('center').setOrigin(0.5);
 
         this.input.once('pointerdown', () => {
 

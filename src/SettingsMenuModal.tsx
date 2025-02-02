@@ -1,4 +1,7 @@
-import { BaseModalProps } from "./modals";
+import { useEffect, useState } from "react";
+import { BaseModalProps, useModals } from "./modals";
+import { player } from "./musicplayer";
+import { InstrumentName } from "soundfont-player";
 
 interface PromptModalProps extends BaseModalProps {
     onConfirm?: () => void;
@@ -19,7 +22,7 @@ export const SettingsMenuModal: FC<PromptModalProps> = ({
     const [instruments, setInstruments] = useState<string[]>([]);
 
     useEffect(() => {
-        fetch("https://gleitz.github.io/midi-js-soundfonts/MusyngKite/names.json").then((res) => res.json()).then(json => setInstruments(json))
+        fetch("https://gleitz.github.io/midi-js-soundfonts/MusyngKite/names.json").then((res) => res.json()).then(json => setInstruments((json as string[]).sort()))
     }, [])
 
     return (
