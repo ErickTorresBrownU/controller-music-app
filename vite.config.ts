@@ -1,19 +1,33 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import commonjs from "@rollup/plugin-commonjs"; // Add Rollup's CommonJS plugin
+import * as dotenv from 'dotenv'
 
-// @ts-expect-error process is a nodejs global
+// @ts-expect-error process is a Node.js global
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vitejs.dev/config/
-export default defineConfig(async () => ({
-    plugins: [react(), tailwindcss()],
+dotenv.config();
 
-    // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-    //
-    // 1. prevent vite from obscuring rust errors
+export default defineConfig({
+    plugins: [
+        react(),
+        tailwindcss(),
+        nodePolyfills({
+            globals: {
+                process: true,
+                Buffer: true,
+                global: true, // Ensure global is polyfilled
+            }
+        }),
+        commonjs(), // Add CommonJS support
+    ],
+    define: {
+        global: "globalThis", // Map global to globalThis
+        "process.env.NODE_PATH": JSON.stringify(process.env.NODE_PATH),
+    },
     clearScreen: false,
-    // 2. tauri expects a fixed port, fail if that port is not available
     server: {
         port: 1420,
         strictPort: true,
@@ -26,8 +40,15 @@ export default defineConfig(async () => ({
             }
             : undefined,
         watch: {
-            // 3. tell vite to ignore watching `src-tauri`
             ignored: ["**/src-tauri/**"],
         },
     },
-}));
+    resolve: {
+        alias: {
+            // Add any additional polyfills or overrides here if necessary
+        },
+    },
+    optimizeDeps: {
+        include: ["@magenta/music"], // Ensure this is pre-bundled
+    },
+});

@@ -4,29 +4,29 @@
 use gamepad::GamepadEngine;
 
 fn main() {
-    std::thread::spawn(|| {
-        let mut gamepad_engine = GamepadEngine::new();
-        let mut current_gamepad_state = None;
+    // std::thread::spawn(|| {
+    //     let mut gamepad_engine = GamepadEngine::new();
+    //     let mut current_gamepad_state = None;
 
-        loop {
-            gamepad_engine.update().unwrap();
+    //     loop {
+    //         gamepad_engine.update().unwrap();
 
-            match gamepad_engine.gamepads().as_slice() {
-                [] => todo!(),
-                [first, ..] => current_gamepad_state = Some(first),
-            }
+    //         match gamepad_engine.gamepads().as_slice() {
+    //             [] => todo!(),
+    //             [first, ..] => current_gamepad_state = Some(first),
+    //         }
 
-            if current_gamepad_state.is_none() {
-                continue;
-            }
+    //         if current_gamepad_state.is_none() {
+    //             continue;
+    //         }
 
-            for (key, button) in current_gamepad_state.unwrap().buttons() {
-                if button.is_just_pressed() {
-                    println!("Just Pressed: {:?}", key);
-                }
-            }
-        }
-    });
+    //         for (key, button) in current_gamepad_state.unwrap().buttons() {
+    //             if button.is_just_pressed() {
+    //                 println!("Just Pressed: {:?}", key);
+    //             }
+    //         }
+    //     }
+    // });
 
     controller_music_app_lib::run()
 }

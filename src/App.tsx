@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import "./App.css";
+import { buttonDown } from './musicplayer'
+
 
 const App = () => {
     const [buttonStates, setButtonStates] = useState<Map<ControllerButtonKind, number>>(new Map());
@@ -22,6 +24,10 @@ const App = () => {
                 newButtonStates.set(index as ControllerButtonKind, button.pressed ? 1 : button.value);
             }
         });
+
+        if (newButtonStates.get(ControllerButtonKind.A) ?? 0 > 0) {
+            buttonDown(0, true);
+        }
 
         // Detect trigger changes (only update when value changes significantly)
         const leftTrigger = gamepad.buttons[6]?.value ?? 0;
