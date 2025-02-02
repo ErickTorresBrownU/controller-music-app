@@ -11,6 +11,7 @@ export class ClickerGame extends Scene {
     private inputCooldown: number;
     private moveSpeed: number; // Movement speed
     private background: Phaser.GameObjects.TileSprite;
+    private clef: Phaser.GameObjects.Sprite;
 
     constructor() {
         super('ClickerGame');
@@ -38,6 +39,9 @@ export class ClickerGame extends Scene {
         this.player.width = 1000;
         this.player.setCollideWorldBounds(true);
         this.player.setDragY(600); // 🌟 Set drag for smooth stopping
+
+        this.clef = this.add.sprite(80, 415, 'clef-note');
+        this.clef.setScale(1.5, 1.5)
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.inputCooldown = 0;
@@ -72,6 +76,8 @@ export class ClickerGame extends Scene {
     }
 
     dropCoin() {
+        if (!this.gameRunning) return;
+
         const x = 1000;
         const y = Phaser.Math.Between(600, 150);
 
@@ -84,7 +90,6 @@ export class ClickerGame extends Scene {
     }
 
     collectCoin(player, coin) {
-        coin.play('vanish');
         coin.disableBody(true, true);
         this.score++;
         this.scoreText.setText('Coins: ' + this.score);
@@ -96,15 +101,15 @@ export class ClickerGame extends Scene {
         }
     }
 
-    clickCoin(coin) {
-        coin.disableInteractive();
-        coin.setVelocity(0, 0);
-        coin.play('vanish');
-        coin.once('animationcomplete-vanish', () => coin.destroy());
-        this.score++;
-        this.scoreText.setText('Coins: ' + this.score);
-        this.dropCoin();
-    }
+    // clickCoin(coin) {
+    //     coin.disableInteractive();
+    //     coin.setVelocity(0, 0);
+    //     coin.play('vanish');
+    //     coin.once('animationcomplete-vanish', () => coin.destroy());
+    //     this.score++;
+    //     this.scoreText.setText('Coins: ' + this.score);
+    //     this.dropCoin();
+    // }
 
     /** Update function to process input */
     update() {
